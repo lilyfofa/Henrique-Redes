@@ -1,4 +1,5 @@
 from sympy import *
+from prettytable import PrettyTable
 
 # Corinthians
 print("Corinthians")
@@ -41,17 +42,17 @@ for item in admitancias:
     ybus[barra2, barra1] -= y
 
 # Display da matriz Ybus
-print("-" * 30)
+print("-" * 100)
 print("Ybus")
 for i in range(0, n_barras):
-    print("-" * 30)
+    print("-" * 100)
     print(f"Linha {i + 1}")
     for j in range(0, n_barras):
         if N(im(ybus[i, j])) >= 0:
             print(f"Y{i+1}{j+1} = {float(N(re(ybus[i, j]))):.4f} + j{float(N(im(ybus[i, j]))):.4f} [pu]")
         else:
             print(f"Y{i + 1}{j + 1} = {float(N(re(ybus[i, j]))):.4f} - j{float(abs(N(im(ybus[i, j])))):.4f} [pu]")
-print("-" * 30)
+print("-" * 100)
 
 # Cópia das variáveis para adequação ao código antigo
 V = Tensao
@@ -107,7 +108,7 @@ for i in range(0, len(equacoes)):
 
 # Início do método iterativo (flatstart)
 print("Início do método iterativo")
-print("-" * 30)
+print("-" * 100)
 k = 0
 valores_calculados = zeros(len(equacoes), 1)
 
@@ -117,7 +118,7 @@ for i in range(0, len(valores_calculados)):
 
 # Display dos valores encontrados
 print(f"Iteração {k}")
-print("-" * 30)
+print("-" * 100)
 print("Valores das variáveis")
 for i in chute_variaveis:
     if str(i[0])[0] == 'V':
@@ -147,22 +148,22 @@ while max(abs(valores_calculados)) > erro:
             print(f"delta{variaveis[i]}: {delta[i]:.4f} rad")
     k += 1
     # Display dos novos valores encontrados para as variáveis e os valores das equações
-    print("-" * 30)
+    print("-" * 100)
     print(f"Iteração {k}")
-    print("-" * 30)
+    print("-" * 100)
     print("Valores das variáveis")
     for i in chute_variaveis:
         if str(i[0])[0] == 'V':
             print(f"{i[0]}: {i[1]:.4f} pu")
         else:
-            print(f"{i[0]}: {i[1]} rad = {float(N(i[1] * 180 / pi)):.4f} [graus]")
+            print(f"{i[0]}: {i[1]:.4f} rad = {float(N(i[1] * 180 / pi)):.4f} [graus]")
     print("Valores das equações")
     for i in range(0, len(valores_calculados)):
         print(f"{nomes_equacoes[i]} = {valores_calculados[i]:.4f} pu")
 # Display do resultado final
-print("-" * 30)
+print("-" * 100)
 print(f"Resultado final")
-print("-" * 30)
+print("-" * 100)
 print("Valores das variáveis")
 for i in chute_variaveis:
     if str(i[0])[0] == 'V':
@@ -172,6 +173,94 @@ for i in chute_variaveis:
 print("Valores das equações")
 for i in range(0, len(valores_calculados)):
     print(f"{nomes_equacoes[i]} = {valores_calculados[i]:.4f} pu")
-print("-" * 30)
+print("-" * 100)
+
+# Atualizando os vetores de tensão e fase com os resultados encontrados
+V_resultados = V
+Theta_resultados = Theta
+
+for i in range(0, len(V_resultados)):
+    for j in range(0, len(chute_variaveis)):
+        if V_resultados[i] == chute_variaveis[j][0]:
+            V_resultados[i] = chute_variaveis[j][1]
+
+for i in range(0, len(Theta_resultados)):
+    for j in range(0, len(chute_variaveis)):
+        if Theta_resultados[i] == chute_variaveis[j][0]:
+            Theta_resultados[i] = chute_variaveis[j][1]
+
+# Encontrando Pk e Qk
+Pk = []
+Qk = []
+
+for i in range(0, n_barras):
+    expressao1 = 0
+    expressao2 = 0
+    for j in range(0, n_barras):
+        expressao1 += V_resultados[i] * V_resultados[j] * (gbus[i, j] * cos(Theta_resultados[i] - Theta_resultados[j]) +
+                                                          bbus[i, j] * sin(Theta_resultados[i] - Theta_resultados[j]))
+        expressao2 += V_resultados[i] * V_resultados[j] * (gbus[i, j] * sin(Theta_resultados[i] - Theta_resultados[j])
+                                                           - bbus[i, j] * cos(Theta_resultados[i] - Theta_resultados[j]))
+    Pk.append(expressao1)
+    Qk.append(expressao2)
+
+# Criação da tabela com o resumo dos dados de barra
+tabela1 = PrettyTable(['Barra', 'V [pu]', 'Theta [rad]', 'P [pu]', 'Q [pu]'])
+
+for i in range(0, n_barras):
+    linha = [i + 1, f'{V_resultados[i]:.4f}', f'{Theta_resultados[i]:.4f}', f'{Pk[i]:.4f}', f'{Qk[i]:.4f}']
+    tabela1.add_row(linha)
+
+print("Tabela 1 - Resumo dos dados de barra após resolução do sistema.")
+print(tabela1)
+print("-"*100)
+
+# Encontrando o fluxo de potência nas linhas
+Vk, Vm, Thetak, Thetam, ykm, bshkm = symbols('Vk Vm Thetak Thetam ykm bshkm')
+
+Pkm = Vk*Vk*re(ykm) - Vk*Vm*re(ykm)*cos(Thetak - Thetam) - Vk*Vm*im(ykm)*sin(Thetak - Thetam)
+Qkm = -Vk*Vk*(im(ykm)+bshkm) + Vk*Vm*im(ykm)*cos(Thetak - Thetam) - Vk*Vm*re(ykm)*sin(Thetak - Thetam)
+
+Plinha = []
+Qlinha = []
+Slinha = []
+
+for carga in admitancias:
+    valor1 = Pkm.subs([(Vk, V[carga[2] - 1]), (Vm, V[carga[3] - 1]), (ykm, 1/carga[0]), (Thetak, Theta[carga[2]-1]),
+                      (Thetam, Theta[carga[3]-1])])
+    valor2 = Qkm.subs([(Vk, V[carga[2] - 1]), (Vm, V[carga[3] - 1]), (ykm, 1 / carga[0]), (Thetak, Theta[carga[2] - 1]),
+                      (Thetam, Theta[carga[3] - 1]), (bshkm, carga[1]/200)])
+    valor3 = sqrt(valor1**2 + valor2**2)
+    Plinha.append(valor1)
+    Qlinha.append(valor2)
+    Slinha.append(valor3)
+
+# Encontrando as perdas de potência ativa nas linhas
+soma = 0
+Perdas = []
+for item in admitancias:
+    barra1 = item[2] - 1
+    barra2 = item[3] - 1
+    carga = item[0]
+    V1 = V[barra1]*cos(Theta[barra1]) + I*V[barra1]*sin(Theta[barra1])
+    V2 = V[barra2]*cos(Theta[barra2]) + I*V[barra2]*sin(Theta[barra2])
+    queda = abs(V1-V2)
+    P = re(queda**2/carga)
+    soma += P
+    Perdas.append(P)
+
+# Criação da tabela com os dados de linha
+tabela2 = PrettyTable(['Linha', 'Impedância [pu]', 'Bsh [pu]', 'Pkm [pu]', 'Qkm [pu]', 'Skm [pu]', 'Perdas [pu]'])
+
+for i in range(0, len(admitancias)):
+    linha = [f"{admitancias[i][2]} e {admitancias[i][3]}", admitancias[i][0], f"{admitancias[i][1]/(2*S_base):.4f}",
+             f"{Plinha[i]:.4f}", f"{Qlinha[i]:.4f}", f"{Slinha[i]:.4f}", f"{Perdas[i]:.4f}"]
+    tabela2.add_row(linha)
+
+print("Tabela 2 - Dados de linha após resolução do sistema")
+print(tabela2)
+print(f"Perdas totais: {soma:.4f} pu")
+print("-"*100)
+
 # EmpelTec Jr.
 print("(c) 2024 - EmpelTec Jr. - Todos os direitos reservados")
