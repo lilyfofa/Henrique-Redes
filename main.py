@@ -1,5 +1,6 @@
 from sympy import *
 from prettytable import PrettyTable
+from tabulate import tabulate
 
 # Corinthians
 print("Corinthians")
@@ -205,14 +206,14 @@ for i in range(0, n_barras):
     Qk.append(expressao2)
 
 # Criação da tabela com o resumo dos dados de barra
-tabela1 = PrettyTable(['Barra', 'V [pu]', 'Theta [rad]', 'P [pu]', 'Q [pu]'])
+tabela1 = [['Barra', 'V [pu]', 'Theta [rad]', 'P [pu]', 'Q [pu]']]
 
 for i in range(0, n_barras):
-    linha = [i + 1, f'{V_resultados[i]:.4f}', f'{Theta_resultados[i]:.4f}', f'{Pk[i]:.4f}', f'{Qk[i]:.4f}']
-    tabela1.add_row(linha)
+    linha = [i + 1, V_resultados[i], Theta_resultados[i], Pk[i], Qk[i]]
+    tabela1.append(linha)
 
 print("Tabela 1 - Resumo dos dados de barra após resolução do sistema.")
-print(tabela1)
+print(tabulate(tabela1, headers='firstrow', tablefmt='fancy_grid', numalign="center", floatfmt=".4f"))
 print("-"*100)
 
 # Encontrando o fluxo de potência nas linhas
@@ -250,15 +251,16 @@ for item in admitancias:
     Perdas.append(P)
 
 # Criação da tabela com os dados de linha
-tabela2 = PrettyTable(['Linha', 'Impedância [pu]', 'Bsh [pu]', 'Pkm [pu]', 'Qkm [pu]', 'Skm [pu]', 'Perdas [pu]'])
+tabela2 = [['Linha', 'Impedância [pu]', 'Bsh [pu]', 'Pkm [pu]', 'Qkm [pu]', 'Skm [pu]', 'Perdas [pu]']]
 
 for i in range(0, len(admitancias)):
-    linha = [f"{admitancias[i][2]} e {admitancias[i][3]}", admitancias[i][0], f"{admitancias[i][1]/(2*S_base):.4f}",
-             f"{Plinha[i]:.4f}", f"{Qlinha[i]:.4f}", f"{Slinha[i]:.4f}", f"{Perdas[i]:.4f}"]
-    tabela2.add_row(linha)
+    linha = [f"{admitancias[i][2]} e {admitancias[i][3]}", admitancias[i][0], admitancias[i][1]/(2*S_base),
+             Plinha[i], Qlinha[i], Slinha[i], Perdas[i]]
+    tabela2.append(linha)
 
 print("Tabela 2 - Dados de linha após resolução do sistema")
-print(tabela2)
+print(tabulate(tabela2, headers='firstrow', tablefmt='fancy_grid', numalign="center", floatfmt=".4f",
+               stralign="center"))
 print(f"Perdas totais: {soma:.4f} pu")
 print("-"*100)
 
