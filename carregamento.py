@@ -20,24 +20,46 @@ stop = 3.0138
 alpha = arange(start, stop, step)
 y = []
 
+print('Gráfico de carregamento')
+print('-'*100)
+print(f'Começo: {start}')
+print(f'Fim: {stop}')
+print(f'Passo: {step}')
+print('-'*100)
+
 for i in alpha:
-    print(f"{i:.2f}")
-    resultado = FluxoDePotencia(6, 100, 0.0001, [0, 1.4, 0.6, -0.9, -1, -0.9],
-                        [0, 0, 0, -0.6, -0.7, -0.5], [1.05, 1.06, 1.05, 0, 0, 0],
-                        [0, -1, -1, -1, -1, -1], dados_linha, i)
+    print(f"Calculando solução para lambda = {i:.2f}.")
+    resultado = FluxoDePotencia(6, 100, 0.0001, [0, 1.4, 0.6, 0, 0, 0],
+                        [0, 0, 0, 0.9, 1, 0.9], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0.6, 0.7, 0.5],
+                                [1.05, 1.06, 1.05, 0, 0, 0], [0, -1, -1, -1, -1, -1], dados_linha, i)
     Tensoes = resultado[0]
     soma = 0
     for i in range(0, len(Tensoes)):
         soma += Tensoes[i]
     media = soma/len(Tensoes)
-    y.append(media)
+    y.append([tensao for tensao in Tensoes])
+
+saida = [[], [], [], [], [], []]
+
+for i in range(0, len(y)):
+    for j in range(0, len(y[0])):
+        saida[j].append(y[i][j])
+
+print('-'*100)
+print('Gerando gráfico...')
 
 plt.figure(1)
-plt.plot(alpha, y)
+plt.plot(alpha, saida[0], label='Barra 1')
+plt.plot(alpha, saida[1], label='Barra 2')
+plt.plot(alpha, saida[2], label='Barra 3')
+plt.plot(alpha, saida[3], label='Barra 4')
+plt.plot(alpha, saida[4], label='Barra 5')
+plt.plot(alpha, saida[5], label='Barra 6')
 plt.title("Tensão média do sistema em função do carregamento")
 plt.xlabel("Carregamento")
 plt.ylabel("Tensão média [pu]")
 plt.xlim(1,  3.1)
 plt.xticks(arange(1, 3.2, 0.1))
 plt.grid()
+plt.legend()
 plt.show()

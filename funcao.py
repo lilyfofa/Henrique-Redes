@@ -1,10 +1,12 @@
 from sympy import *
 
 
-def FluxoDePotencia(n_barras, S_base, erro, Pesp, Qesp, Tensao, Fase, admitancias, alpha):
+def FluxoDePotencia(n_barras, S_base, erro, Pg, Pl, Qg, Ql, Tensao, Fase, admitancias, alpha):
     for i in range(0, n_barras):
-        Pesp[i] *= alpha
-        Qesp[i] *= alpha
+        Pg[i] *= alpha
+        Qg[i] *= alpha
+        Pl[i] *= alpha
+        Ql[i] *= alpha
     ybus = zeros(n_barras, n_barras)
     for item in admitancias:
         bsh = item[1] / (2 * S_base)
@@ -33,15 +35,17 @@ def FluxoDePotencia(n_barras, S_base, erro, Pesp, Qesp, Tensao, Fase, admitancia
             variaveis.append(symbols(f"V{i + 1}"))
             chute_variaveis.append((symbols(f"V{i + 1}"), 1))
     for i in range(0, n_barras):
-        if Pesp[i] != 0:
-            expressao = Pesp[i]
+        Pn = Pg[i] - Pl[i]
+        if Pn != 0:
+            expressao = Pn
             for j in range(0, n_barras):
                 expressao -= V[i] * V[j] * (
                         gbus[i, j] * cos(Theta[i] - Theta[j]) + bbus[i, j] * sin(Theta[i] - Theta[j]))
             equacoes.append(expressao)
     for i in range(0, n_barras):
-        if Qesp[i] != 0:
-            expressao = Qesp[i]
+        Qn = Qg[i] - Ql[i]
+        if Qn != 0:
+            expressao = Qn
             for j in range(0, n_barras):
                 expressao -= V[i] * V[j] * (
                         gbus[i, j] * sin(Theta[i] - Theta[j]) - bbus[i, j] * cos(Theta[i] - Theta[j]))

@@ -2,6 +2,16 @@ from sympy import *
 from prettytable import PrettyTable
 from tabulate import tabulate
 
+
+def roundComplex(z, n):
+    real = re(z)
+    imag = im(z)
+    if imag == 0:
+        return round(float(real), n)
+    else:
+        return round(float(real), n) + 1j * round(float(imag), n)
+
+
 # Corinthians
 print("Corinthians")
 
@@ -11,8 +21,10 @@ S_base = 100  # Potência base em MVA
 erro = 0.0001  # Tolerância para o método de Newton
 
 # Definição dos dados de barra
-Pesp = [0, 1.4, 0.6, -0.9, -1, -0.9]  # Potência ativa líquida nas barras
-Qesp = [0, 0, 0, -0.6, -0.7, -0.5]  # Potência ativa líquida nas barras
+Pg = [0, 1.4, 0.6, 0, 0, 0]  # Potência ativa gerada nas barras
+Pl = [0, 0, 0, 0.9, 1, 0.9] # Potência ativa consumida nas barras
+Qg = [0, 0, 0, 0, 0, 0]  # Potência reativa gerada nas barras
+Ql = [0, 0, 0, 0.6, 0.7, 0.5] # Potência reativa consumida nas barras
 Tensao = [1.05, 1.06, 1.05, 0, 0, 0]  # Magnitude de tensão de cada barra (0 se desconhecido)
 Fase = [0, -1, -1, -1, -1, -1]  # Fase da tensão de cada barra (-1 se desconhecido)
 
@@ -43,17 +55,17 @@ for item in admitancias:
     ybus[barra2, barra1] -= y
 
 # Display da matriz Ybus
-print("-" * 100)
-print("Ybus")
+lista_ybus = []
 for i in range(0, n_barras):
-    print("-" * 100)
-    print(f"Linha {i + 1}")
+    linha = []
     for j in range(0, n_barras):
-        if N(im(ybus[i, j])) >= 0:
-            print(f"Y{i+1}{j+1} = {float(N(re(ybus[i, j]))):.4f} + j{float(N(im(ybus[i, j]))):.4f} [pu]")
-        else:
-            print(f"Y{i + 1}{j + 1} = {float(N(re(ybus[i, j]))):.4f} - j{float(abs(N(im(ybus[i, j])))):.4f} [pu]")
-print("-" * 100)
+        linha.append(roundComplex((ybus[i, j]), 4))
+    lista_ybus.append(linha)
+
+print('-'*100)
+print('Ybus')
+print(tabulate(lista_ybus, tablefmt='fancy_grid', numalign="center", stralign='center'))
+print('-'*100)
 
 # Cópia das variáveis para adequação ao código antigo
 V = Tensao
@@ -85,8 +97,9 @@ for i in range(0, len(Tensao)):
 
 # Construção das equações deltaP
 for i in range(0, n_barras):
-    if Pesp[i] != 0:
-        expressao = Pesp[i]
+    Pn = Pg[i] - Pl[i]
+    if Pn != 0:
+        expressao = Pn
         for j in range(0, n_barras):
             expressao -= V[i] * V[j] * (gbus[i, j] * cos(Theta[i] - Theta[j]) + bbus[i, j] * sin(Theta[i] - Theta[j]))
         equacoes.append(expressao)
@@ -94,8 +107,9 @@ for i in range(0, n_barras):
 
 # Construção das equações deltaQ
 for i in range(0, n_barras):
-    if Qesp[i] != 0:
-        expressao = Qesp[i]
+    Qn = Qg[i] - Ql[i]
+    if Qn != 0:
+        expressao = Qn
         for j in range(0, n_barras):
             expressao -= V[i] * V[j] * (gbus[i, j] * sin(Theta[i] - Theta[j]) - bbus[i, j] * cos(Theta[i] - Theta[j]))
         equacoes.append(expressao)
