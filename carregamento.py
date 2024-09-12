@@ -1,4 +1,4 @@
-from funcao import FluxoDePotencia
+from funcoes import FluxoDePotencia
 import matplotlib.pyplot as plt
 from numpy import arange
 

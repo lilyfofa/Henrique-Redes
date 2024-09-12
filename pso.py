@@ -1,92 +1,93 @@
 import numpy as np
-from funcao import FluxoDePotencia
+from funcoes import FluxoDeCarga
+from time import time
 
 
 def pso(n_particulas, n_iteracoes, n_tensoes, n_pgs):
     # Parâmetros iniciais
     tensoes = np.random.uniform(Vmin, Vmax, (n_particulas, n_tensoes))
-    geracoes = np.random.uniform(Pgmin, Pgmax, (n_particulas, n_pgs))
+    geracoes = np.random.uniform(Vmax, Pgmax, (n_particulas, n_pgs))
     posicoes = np.block([tensoes, geracoes])
     velocidades = np.zeros((n_particulas, n_tensoes + n_pgs))
     # Fitness e melhores posicoes
-    fitness = np.array([FluxoDePotencia(6, 100, 0.0001, np.concatenate(
-        (np.zeros(1), posicao[n_tensoes:n_barras], np.zeros(n_barras - n_pgs - 1))).tolist(),
-                                        [0, 0, 0, 0.9, 1, 0.9], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0.6, 0.7, 0.5],
-                                        np.concatenate((posicao[0:n_tensoes], np.zeros(n_barras - n_tensoes))).tolist(),
-                                        [0, -1, -1, -1, -1, -1],
-                                        dados_linha, 1)[8] for posicao in posicoes])
+    fitness = np.array([FluxoDeCarga(posicao) for posicao in posicoes])
     pbest = np.copy(posicoes)
-    valor_gbest = np.min(fitness)
-    posicao_gbest = pbest[np.argmin(fitness)]
+    valor_pbest = np.copy(fitness)
+    posicao_gbest = np.zeros(n_tensoes + n_pgs)
+    valor_gbest = np.inf
+
+    # Inicialização de pbest e gbest
+    for i in range(n_particulas):
+        if fitness[i] < valor_gbest:
+            valor_gbest = fitness[i]
+            posicao_gbest = np.copy(posicoes[i])  # Usar np.copy para evitar referências
+
+    print(f'Iteração 0 concluída! Perda mínima: {valor_gbest:.4f} pu')
 
     for i in range(n_iteracoes):
         # Definição de velocidade
         r1 = np.random.uniform(0, 1, (n_particulas, n_tensoes + n_pgs))
         r2 = np.random.uniform(0, 1, (n_particulas, n_tensoes + n_pgs))
         velocidades = w * velocidades + c1 * r1 * (pbest - posicoes) + c2 * r2 * (posicao_gbest - posicoes)
+
         # Atualização da posição
         posicoes += velocidades
 
         # Aplicação dos limites de tensão e potência
-        for j in range(0, n_particulas):
-            for k in range(0, n_tensoes):
-                if posicoes[j][k] > Vmax:
-                    posicoes[j][k] = Vmax
-                elif posicoes[j][k] < Vmin:
-                    posicoes[j][k] = Vmin
-            for k in range(n_tensoes, n_tensoes + n_pgs):
-                if posicoes[j][k] > Pgmax:
-                    posicoes[j][k] = Pgmax
-                elif posicoes[j][k] < Pgmin:
-                    posicoes[j][k] = Pgmin
+        for j in range(n_particulas):
+            posicoes[j, :n_tensoes] = np.clip(posicoes[j, :n_tensoes], Vmin, Vmax)
+            posicoes[j, n_tensoes:] = np.clip(posicoes[j, n_tensoes:], Pgmin, Pgmax)
 
         # Atualização do fitness
-        valor_funcao = np.array([FluxoDePotencia(6, 100, 0.0001, np.concatenate(
-            (np.zeros(1), posicao[n_tensoes:n_barras], np.zeros(n_barras - n_pgs - 1))).tolist(),
-                                                 [0, 0, 0, 0.9, 1, 0.9], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0.6, 0.7, 0.5],
-                                                 np.concatenate((posicao[0:n_tensoes], np.zeros(n_barras - n_tensoes))).tolist(),
-                                                 [0, -1, -1, -1, -1, -1],
-                                                 dados_linha, 1)[8] for posicao in posicoes])
+        fitness = np.array([FluxoDeCarga(posicao) for posicao in posicoes])
 
         # Atualização dos melhores valores
-        improved_indices = np.where(valor_funcao < fitness)
-        pbest[improved_indices] = posicoes[improved_indices]
-        fitness[improved_indices] = valor_funcao[improved_indices]
-        if np.min(valor_funcao) < valor_gbest:
-            posicao_gbest = posicoes[np.argmin(valor_funcao)]
-            valor_gbest = np.min(valor_funcao)
-        print(f'Iteração {i+1} concluída! Perda mínima: {valor_gbest:.4f} pu')
+        for j in range(n_particulas):
+            if fitness[j] < valor_pbest[j]:
+                valor_pbest[j] = fitness[j]
+                pbest[j] = np.copy(posicoes[j])
+
+        # Atualização de gbest
+        melhor_fitness_idx = np.argmin(fitness)
+        if fitness[melhor_fitness_idx] < valor_gbest:
+            valor_gbest = fitness[melhor_fitness_idx]
+            posicao_gbest = np.copy(posicoes[melhor_fitness_idx])
+        print(f'Iteração {i + 1} concluída! Perda mínima: {valor_gbest:.4f} pu')
     return valor_gbest, posicao_gbest
 
 
-n_particulas = 5
+# Parâmetros do PSO
+n_particulas = 25
 n_iteracoes = 50
 n_barras = 6
 n_tensoes = 3
 n_pgs = 2
 
-w = 0.5
-c1 = 1
-c2 = 2
+# Coeficientes do algoritmo
+w = 0.9
+c1 = 2
+c2 = 0.5
 
+# Limites das variáveis de estado
 Vmin = 0.94
 Vmax = 1.06
+Pgmin = 0
+Pgmax = 1.5
 
-Pgmin = 0  # Limite mínimo?
-Pgmax = 1.5  # Limite máximo?
+# Execução do PSO
+print('PSO para minimização das perdas do sistema')
+print('-' * 50)
 
-dados_linha = [(0.1 + 1j * 0.2, 4, 1, 2),
-               (0.05 + 1j * 0.2, 4, 1, 4),
-               (0.08 + 1j * 0.3, 6, 1, 5),
-               (0.05 + 1j * 0.25, 6, 2, 3),
-               (0.05 + 1j * 0.1, 2, 2, 4),
-               (0.1 + 1j * 0.3, 4, 2, 5),
-               (0.07 + 1j * 0.2, 5, 2, 6),
-               (0.12 + 1j * 0.26, 5, 3, 5),
-               (0.02 + 1j * 0.10, 2, 3, 6),
-               (0.20 + 1j * 0.40, 8, 4, 5),
-               (0.10 + 1j * 0.30, 6, 5, 6)]
+t0 = time()
+perda_minima, valor_vpg = pso(n_particulas, n_iteracoes, n_tensoes, n_pgs)
+t1 = time()
 
-perda_minima, valor_vpg = pso(n_particulas=n_particulas, n_iteracoes=n_iteracoes, n_tensoes=n_tensoes, n_pgs=n_pgs)
+# Resultados
+print('-' * 50)
+print(f'Resultado final:')
+variaveis = ['V1', 'V2', 'V3', 'Pg1', 'Pg2']
+for i in range(len(variaveis)):
+    print(f'{variaveis[i]} = {valor_vpg[i]:.4f} pu')
+print(f'Perdas totais = {perda_minima:.4f} pu')
+print(f'Tempo de execução: {t1 - t0:.2f} s')
 
-print(valor_vpg)
