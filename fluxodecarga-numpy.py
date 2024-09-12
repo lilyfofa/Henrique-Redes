@@ -1,10 +1,10 @@
 import numpy as np
 
-V1 = 1.05
-V2 = 1.06
-V3 = 1.05
-Pg2 = 1.4
-Pg3 = 0.6
+V1 = 1.06
+V2 = 1.0489
+V3 = 1.06
+Pg2 = 1.0230
+Pg3 = 1.0075
 
 x = np.array([1, 1, 1, 0, 0, 0, 0, 0])
 
@@ -28,7 +28,7 @@ x = np.array([1, 1, 1, 0, 0, 0, 0, 0])
 
 B = np.array([ΔP2, ΔP3, ΔP4, ΔP5, ΔP6, ΔQ4, ΔQ5, ΔQ6])
 
-while abs(np.max(B)) > 0.0001:
+while np.max(abs(B)) > 0.0001:
     A = np.array([[-V2 * (8.0 * np.sin(x[3] - x[5]) - 4.0 * np.cos(x[3] - x[5])),
                    -V2 * (3.0 * np.sin(x[3] - x[6]) - 1.0 * np.cos(x[3] - x[6])),
                    -V2 * (4.4543429844098 * np.sin(x[3] - x[7]) - 1.55902004454343 * np.cos(x[3] - x[7])),
@@ -170,3 +170,4 @@ unidade= ['pu', 'pu', 'pu', 'rad', 'rad', 'rad', 'rad', 'rad']
 for i in range(len(x)):
     print(f'{nomes[i]} = {x[i]:.4f} {unidade[i]}')
 print(f'Perdas: {soma:.4f} pu')
+print('(c) 2024 - EmpelTec Jr - Todos os direitos reservados')

@@ -3,7 +3,7 @@ from time import time
 import numpy as np
 
 
-def FluxoDePotencia(n_barras, S_base, erro, Pg, Pl, Qg, Ql, Tensao, Fase, admitancias, alpha):
+def FluxoDePotencia(n_barras, S_base, erro, Pg, Pl, Qg, Ql, Tensao, Fase, admitancias, alpha, flatstartV, flatstartT):
     for i in range(0, n_barras):
         Pg[i] *= alpha
         Qg[i] *= alpha
@@ -27,15 +27,15 @@ def FluxoDePotencia(n_barras, S_base, erro, Pg, Pl, Qg, Ql, Tensao, Fase, admita
     variaveis = []
     chute_variaveis = []
     for i in range(0, len(Tensao)):
-        if Theta[i] == -1:
-            Theta[i] = symbols(f"Theta{i + 1}")
-            variaveis.append(symbols(f"Theta{i + 1}"))
-            chute_variaveis.append((symbols(f"Theta{i + 1}"), 0))
-    for i in range(0, len(Tensao)):
         if Tensao[i] == 0:
             V[i] = symbols(f"V{i + 1}")
             variaveis.append(symbols(f"V{i + 1}"))
-            chute_variaveis.append((symbols(f"V{i + 1}"), 1))
+            chute_variaveis.append((symbols(f"V{i + 1}"), flatstartV[i]))
+    for i in range(0, len(Tensao)):
+        if Theta[i] == -1:
+            Theta[i] = symbols(f"Theta{i + 1}")
+            variaveis.append(symbols(f"Theta{i + 1}"))
+            chute_variaveis.append((symbols(f"Theta{i + 1}"), flatstartT[i]))
     for i in range(0, n_barras):
         Pn = Pg[i] - Pl[i]
         if Pn != 0:
@@ -53,7 +53,6 @@ def FluxoDePotencia(n_barras, S_base, erro, Pg, Pl, Qg, Ql, Tensao, Fase, admita
                         gbus[i, j] * sin(Theta[i] - Theta[j]) - bbus[i, j] * cos(Theta[i] - Theta[j]))
             equacoes.append(expressao)
     jacobiano = zeros(len(equacoes), len(equacoes))
-    print(variaveis, len(variaveis), len(equacoes))
     for i in range(0, len(equacoes)):
         for j in range(0, len(variaveis)):
             jacobiano[i, j] = diff(equacoes[i], variaveis[j])
@@ -144,7 +143,7 @@ def FluxoDeCarga(posicao):
     ΔQ5 = -V1*x[1]*(-0.829875518672199*np.sin(x[6]) - 3.11203319502075*np.cos(x[6])) - V2*x[1]*(1.0*np.sin(x[3] - x[6]) - 3.0*np.cos(x[3] - x[6])) - V3*x[1]*(1.46341463414634*np.sin(x[4] - x[6]) - 3.17073170731707*np.cos(x[4] - x[6])) - x[0]*x[1]*(1.0*np.sin(x[5] - x[6]) - 2.0*np.cos(x[5] - x[6])) - 14.1377649023378*x[1]**2 - x[1]*x[2]*(-1.0*np.sin(x[6] - x[7]) - 3.0*np.cos(x[6] - x[7])) - 0.7
     ΔQ6 = -V2*x[2]*(1.55902004454343*np.sin(x[3] - x[7]) - 4.4543429844098*np.cos(x[3] - x[7])) - V3*x[2]*(1.92307692307692*np.sin(x[4] - x[7]) - 9.61538461538461*np.cos(x[4] - x[7])) - x[1]*x[2]*(1.0*np.sin(x[6] - x[7]) - 3.0*np.cos(x[6] - x[7])) - 17.0047275997944*x[2]**2 - 0.5
     B = np.array([ΔP2, ΔP3, ΔP4, ΔP5, ΔP6, ΔQ4, ΔQ5, ΔQ6])
-    while abs(np.max(B)) > 0.0001:
+    while np.max(abs(B)) > 0.0001:
         A = np.array([[-V2 * (8.0 * np.sin(x[3] - x[5]) - 4.0 * np.cos(x[3] - x[5])),
                        -V2 * (3.0 * np.sin(x[3] - x[6]) - 1.0 * np.cos(x[3] - x[6])),
                        -V2 * (4.4543429844098 * np.sin(x[3] - x[7]) - 1.55902004454343 * np.cos(x[3] - x[7])),

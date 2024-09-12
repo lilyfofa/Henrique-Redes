@@ -90,3 +90,5 @@ for i in range(len(variaveis)):
     print(f'{variaveis[i]} = {valor_vpg[i]:.4f} pu')
 print(f'Perdas totais = {perda_minima:.4f} pu')
 print(f'Tempo de execução: {t1 - t0:.2f} s')
+print('-' * 50)
+print('(c) 2024 - EmpelTec Jr - Todos os direitos reservados')

@@ -29,10 +29,18 @@ print('-'*100)
 
 for i in alpha:
     print(f"Calculando solução para lambda = {i:.2f}.")
-    resultado = FluxoDePotencia(6, 100, 0.0001, [0, 1.4, 0.6, 0, 0, 0],
+    if i == 1:
+        resultado = FluxoDePotencia(6, 100, 0.0001, [0, 1.4, 0.6, 0, 0, 0],
                         [0, 0, 0, 0.9, 1, 0.9], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0.6, 0.7, 0.5],
-                                [1.05, 1.06, 1.05, 0, 0, 0], [0, -1, -1, -1, -1, -1], dados_linha, i)
+                                [1.05, 1.06, 1.05, 0, 0, 0], [0, -1, -1, -1, -1, -1], dados_linha, i,
+                                [1, 1, 1, 1, 1, 1], [0, 0, 0, 0, 0, 0])
+    else:
+        resultado = FluxoDePotencia(6, 100, 0.0001, [0, 1.4, 0.6, 0, 0, 0],
+                                [0, 0, 0, 0.9, 1, 0.9], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0.6, 0.7, 0.5],
+                                [1.05, 1.06, 1.05, 0, 0, 0], [0, -1, -1, -1, -1, -1], dados_linha, i,
+                                Tensoes, Fase)
     Tensoes = resultado[0]
+    Fase = resultado[1]
     soma = 0
     for i in range(0, len(Tensoes)):
         soma += Tensoes[i]
@@ -55,9 +63,9 @@ plt.plot(alpha, saida[2], label='Barra 3')
 plt.plot(alpha, saida[3], label='Barra 4')
 plt.plot(alpha, saida[4], label='Barra 5')
 plt.plot(alpha, saida[5], label='Barra 6')
-plt.title("Tensão média do sistema em função do carregamento")
+plt.title("Tensões de barra em função do carregamento")
 plt.xlabel("Carregamento")
-plt.ylabel("Tensão média [pu]")
+plt.ylabel("Magnitude de tensão de barra [pu]")
 plt.xlim(1,  3.1)
 plt.xticks(arange(1, 3.2, 0.1))
 plt.grid()
