@@ -3,17 +3,15 @@ from funcoes import FluxoDeCarga
 from time import time
 
 
-def pso(n_particulas, n_iteracoes, n_tensoes, n_pgs):
+def pso(n_particulas, n_iteracoes, n_pgs):
     # Parâmetros iniciais
-    tensoes = np.random.uniform(Vmin, Vmax, (n_particulas, n_tensoes))
-    geracoes = np.random.uniform(Vmax, Pgmax, (n_particulas, n_pgs))
-    posicoes = np.block([tensoes, geracoes])
-    velocidades = np.zeros((n_particulas, n_tensoes + n_pgs))
+    posicoes = np.random.uniform(Vmax, Pgmax, (n_particulas, n_pgs))
+    velocidades = np.zeros((n_particulas,n_pgs))
     # Fitness e melhores posicoes
-    fitness = np.array([FluxoDeCarga(posicao) for posicao in posicoes])
+    fitness = np.array([FluxoDeCarga(posicao, 1)[0] for posicao in posicoes])
     pbest = np.copy(posicoes)
     valor_pbest = np.copy(fitness)
-    posicao_gbest = np.zeros(n_tensoes + n_pgs)
+    posicao_gbest = np.zeros(n_pgs)
     valor_gbest = np.inf
 
     # Inicialização de pbest e gbest
@@ -26,8 +24,8 @@ def pso(n_particulas, n_iteracoes, n_tensoes, n_pgs):
 
     for i in range(n_iteracoes):
         # Definição de velocidade
-        r1 = np.random.uniform(0, 1, (n_particulas, n_tensoes + n_pgs))
-        r2 = np.random.uniform(0, 1, (n_particulas, n_tensoes + n_pgs))
+        r1 = np.random.uniform(0, 1, (n_particulas, n_pgs))
+        r2 = np.random.uniform(0, 1, (n_particulas, n_pgs))
         velocidades = w * velocidades + c1 * r1 * (pbest - posicoes) + c2 * r2 * (posicao_gbest - posicoes)
 
         # Atualização da posição
@@ -35,11 +33,10 @@ def pso(n_particulas, n_iteracoes, n_tensoes, n_pgs):
 
         # Aplicação dos limites de tensão e potência
         for j in range(n_particulas):
-            posicoes[j, :n_tensoes] = np.clip(posicoes[j, :n_tensoes], Vmin, Vmax)
-            posicoes[j, n_tensoes:] = np.clip(posicoes[j, n_tensoes:], Pgmin, Pgmax)
+            posicoes[j, :] = np.clip(posicoes[j, :], Pgmin, Pgmax)
 
         # Atualização do fitness
-        fitness = np.array([FluxoDeCarga(posicao) for posicao in posicoes])
+        fitness = np.array([FluxoDeCarga(posicao, 1)[0] for posicao in posicoes])
 
         # Atualização dos melhores valores
         for j in range(n_particulas):
@@ -57,16 +54,15 @@ def pso(n_particulas, n_iteracoes, n_tensoes, n_pgs):
 
 
 # Parâmetros do PSO
-n_particulas = 25
-n_iteracoes = 50
+n_particulas = 20
+n_iteracoes = 200
 n_barras = 6
-n_tensoes = 3
 n_pgs = 2
 
 # Coeficientes do algoritmo
 w = 0.9
-c1 = 2
-c2 = 0.5
+c1 = 1.25
+c2 = 1.25
 
 # Limites das variáveis de estado
 Vmin = 0.94
@@ -79,13 +75,13 @@ print('PSO para minimização das perdas do sistema')
 print('-' * 50)
 
 t0 = time()
-perda_minima, valor_vpg = pso(n_particulas, n_iteracoes, n_tensoes, n_pgs)
+perda_minima, valor_vpg = pso(n_particulas, n_iteracoes, n_pgs)
 t1 = time()
 
 # Resultados
 print('-' * 50)
 print(f'Resultado final:')
-variaveis = ['V1', 'V2', 'V3', 'Pg1', 'Pg2']
+variaveis = ['Pg1', 'Pg2']
 for i in range(len(variaveis)):
     print(f'{variaveis[i]} = {valor_vpg[i]:.4f} pu')
 print(f'Perdas totais = {perda_minima:.4f} pu')

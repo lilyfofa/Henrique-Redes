@@ -4,6 +4,14 @@ import numpy as np
 
 
 def FluxoDePotencia(n_barras, S_base, erro, Pg, Pl, Qg, Ql, Tensao, Fase, admitancias, alpha, flatstartV, flatstartT):
+    if not flatstartV:
+        flatstartV = []
+        for i in range(len(Tensao)):
+            flatstartV.append(1)
+    if not flatstartT:
+        flatstartT = []
+        for i in range(len(Fase)):
+            flatstartT.append(0)
     for i in range(0, n_barras):
         Pg[i] *= alpha
         Qg[i] *= alpha
@@ -127,12 +135,25 @@ def FluxoDePotencia(n_barras, S_base, erro, Pg, Pl, Qg, Ql, Tensao, Fase, admita
     return V_resultados, Theta_resultados, Pk, Qk, Plinha, Qlinha, Slinha, Perdas, soma
 
 
-def FluxoDeCarga(posicao):
-    V1 = posicao[0]
-    V2 = posicao[1]
-    V3 = posicao[2]
-    Pg2 = posicao[3]
-    Pg3 = posicao[4]
+def FluxoDeCarga(posicao, opcao=0):
+    if opcao == 0:  # Ativo - reativo
+        V1 = posicao[0]
+        V2 = posicao[1]
+        V3 = posicao[2]
+        Pg2 = posicao[3]
+        Pg3 = posicao[4]
+    elif opcao == 1:  # Ativo
+        V1 = 1.05
+        V2 = 1.06
+        V3 = 1.05
+        Pg2 = posicao[0]
+        Pg3 = posicao[1]
+    elif opcao == 2:  # Reativo
+        V1 = posicao[0]
+        V2 = posicao[1]
+        V3 = posicao[2]
+        Pg2 = 1.4
+        Pg3 = 0.6
     x = np.array([1, 1, 1, 0, 0, 0, 0, 0])
     ΔP2 = Pg2 - V1*V2*(4.0*np.sin(x[3]) - 2.0*np.cos(x[3])) - 9.3282508137742*V2**2 - V2*V3*(3.84615384615385*np.sin(x[3] - x[4]) - 0.769230769230769*np.cos(x[3] - x[4])) - V2*x[0]*(8.0*np.sin(x[3] - x[5]) - 4.0*np.cos(x[3] - x[5])) - V2*x[1]*(3.0*np.sin(x[3] - x[6]) - 1.0*np.cos(x[3] - x[6])) - V2*x[2]*(4.4543429844098*np.sin(x[3] - x[7]) - 1.55902004454343*np.cos(x[3] - x[7]))
     ΔP3 = Pg3 - V2*V3*(-3.84615384615385*np.sin(x[3] - x[4]) - 0.769230769230769*np.cos(x[3] - x[4])) - 4.15572232645403*V3**2 - V3*x[1]*(3.17073170731707*np.sin(x[4] - x[6]) - 1.46341463414634*np.cos(x[4] - x[6])) - V3*x[2]*(9.61538461538461*np.sin(x[4] - x[7]) - 1.92307692307692*np.cos(x[4] - x[7]))
@@ -306,4 +327,8 @@ def FluxoDeCarga(posicao):
         Vb = complex(V[barra2 - 1] * np.cos(θ[barra2 - 1]), V[barra2 - 1] * np.sin(θ[barra2 - 1]))
         queda = np.absolute(Va - Vb)
         soma += np.real(queda ** 2 / impedancia)
-    return soma
+    rmse = np.sqrt(np.mean(np.array([(x[i]-1)**2 for i in range(3)])))
+    # rmse = np.max(np.array([abs(x[0]-1), abs(x[1]-1), abs(x[2]-1)]))
+    # rmse = x[0] + x[1] + x[2] - 3
+    # rmse = (x[0] + x[1] + x[2] - 3)/3
+    return soma, rmse
