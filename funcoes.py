@@ -331,4 +331,4 @@ def FluxoDeCarga(posicao, opcao=0):
     # rmse = np.max(np.array([abs(x[0]-1), abs(x[1]-1), abs(x[2]-1)]))
     # rmse = x[0] + x[1] + x[2] - 3
     # rmse = (x[0] + x[1] + x[2] - 3)/3
-    return soma, rmse
+    return soma, rmse, [x[0], x[1], x[2]]

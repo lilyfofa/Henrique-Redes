@@ -22,7 +22,7 @@ def pso(n_particulas, n_iteracoes, n_tensoes, n_pgs):
             valor_gbest = fitness[i]
             posicao_gbest = np.copy(posicoes[i])  # Usar np.copy para evitar referências
 
-    print(f'Iteração 0 concluída! Desvio mínimo: {valor_gbest:.4f} pu')
+    print(f'Iteração 0 concluída! Desvio: {valor_gbest:.4f} pu')
 
     for i in range(n_iteracoes):
         # Definição de velocidade
@@ -52,13 +52,13 @@ def pso(n_particulas, n_iteracoes, n_tensoes, n_pgs):
         if fitness[melhor_fitness_idx] < valor_gbest:
             valor_gbest = fitness[melhor_fitness_idx]
             posicao_gbest = np.copy(posicoes[melhor_fitness_idx])
-        print(f'Iteração {i + 1} concluída! Desvio mínimo: {valor_gbest:.4f} pu')
+        print(f'Iteração {i + 1} concluída! Desvio: {valor_gbest:.4f} pu')
     return valor_gbest, posicao_gbest
 
 
 # Parâmetros do PSO
-n_particulas = 5
-n_iteracoes = 50
+n_particulas = 20
+n_iteracoes = 200
 n_barras = 6
 n_tensoes = 3
 n_pgs = 2
@@ -82,13 +82,20 @@ t0 = time()
 perda_minima, valor_vpg = pso(n_particulas, n_iteracoes, n_tensoes, n_pgs)
 t1 = time()
 
+tensoes_carga = FluxoDeCarga(valor_vpg)[2]
+nomes = ['V4', 'V5', 'V6']
+
 # Resultados
 print('-' * 50)
 print(f'Resultado final:')
 variaveis = ['V1', 'V2', 'V3', 'Pg1', 'Pg2']
 for i in range(len(variaveis)):
     print(f'{variaveis[i]} = {valor_vpg[i]:.4f} pu')
-print(f'Desvio mínimo: {perda_minima:.4f} pu')
 print(f'Tempo de execução: {t1 - t0:.2f} s')
+print('-' * 50)
+print('Magnitude de tensão nas barras de carga')
+for i in range(len(tensoes_carga)):
+    print(f'{nomes[i]} = {tensoes_carga[i]:.4f} pu')
+print(f'Desvio (RMSE): {perda_minima:.4f} pu')
 print('-' * 50)
 print('(c) 2024 - EmpelTec Jr - Todos os direitos reservados')
