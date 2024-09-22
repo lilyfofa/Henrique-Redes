@@ -57,8 +57,8 @@ def pso(n_particulas, n_iteracoes, n_tensoes, n_pgs):
 
 
 # Parâmetros do PSO
-n_particulas = 20
-n_iteracoes = 200
+n_particulas = 5
+n_iteracoes = 50
 n_barras = 6
 n_tensoes = 3
 n_pgs = 2
