@@ -6,7 +6,7 @@ from time import time
 def pso(n_particulas, n_iteracoes, n_tensoes, n_pgs):
     # Parâmetros iniciais
     tensoes = np.random.uniform(Vmin, Vmax, (n_particulas, n_tensoes))
-    geracoes = np.random.uniform(Vmax, Pgmax, (n_particulas, n_pgs))
+    geracoes = np.random.uniform(Pgmin, Pgmax, (n_particulas, n_pgs))
     posicoes = np.block([tensoes, geracoes])
     velocidades = np.zeros((n_particulas, n_tensoes + n_pgs))
     # Fitness e melhores posicoes
